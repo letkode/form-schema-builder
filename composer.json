@@ -1,0 +1,27 @@
+{
+  "name": "letkode/form-generate-schema",
+  "description": "Library for Form Schema Builder",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "LetkodeApp",
+      "email": "letkode.app@gmail.com"
+    }
+  ],
+  "require": {
+    "php": ">=8.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "Letkode\\FormSchemaBuilder\\": "src/"
+    }
+  },
+  "extra": {
+    "installer-paths": {
+      ".": "src"
+    }
+  },
+  "suggest": {
+    "doctrine/orm": "^2.x"
+  }
+}
