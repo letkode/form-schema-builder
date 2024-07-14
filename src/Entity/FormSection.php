@@ -44,6 +44,8 @@ class FormSection
     #[ORM\OrderBy(['position' => 'ASC'])]
     private Collection $groups;
 
+    private array $onlyGroups = [];
+
     public function __construct()
     {
         $this->setUuid();
@@ -55,6 +57,10 @@ class FormSection
         $groups = [];
         /** @var FormGroup $group */
         foreach ($this->getGroups() as $group) {
+            if (!empty($this->getOnlyGroups()) && !in_array($group->getTag(), $this->getOnlyGroups())) {
+                continue;
+            }
+
             $groups[$group->getId()] = $group->toArray();
         }
 
@@ -170,6 +176,18 @@ class FormSection
                 $group->setSection(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getOnlyGroups(): array
+    {
+        return $this->onlyGroups;
+    }
+
+    public function setOnlyGroups(array $onlyGroups): self
+    {
+        $this->onlyGroups = $onlyGroups;
 
         return $this;
     }

@@ -33,22 +33,25 @@ class Form
     #[ORM\OrderBy(['position' => 'ASC'])]
     private Collection $sections;
 
+    private array $onlySections = [];
+    private array $onlyGroups = [];
+
     public function __construct()
     {
         $this->setUuid();
         $this->sections = new ArrayCollection();
     }
 
-    public function toArray(?array $onlySections = null): array
+    public function toArray(): array
     {
         $sections = [];
         /** @var FormSection $section */
         foreach ($this->getSections() as $section) {
-            if (is_array($onlySections) && !in_array($section->getTag(), $onlySections)) {
+            if (!empty($this->getOnlySections()) && !in_array($section->getTag(), $this->getOnlySections())) {
                 continue;
             }
 
-            $sections[$section->getId()] = $section->toArray();
+            $sections[$section->getId()] = $section->setOnlyGroups($this->getOnlyGroups())->toArray();
         }
 
         return [
@@ -183,6 +186,30 @@ class Form
                 $section->setForm(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getOnlySections(): array
+    {
+        return $this->onlySections;
+    }
+
+    public function setOnlySections(array $onlySections): self
+    {
+        $this->onlySections = $onlySections;
+
+        return $this;
+    }
+
+    public function getOnlyGroups(): array
+    {
+        return $this->onlyGroups;
+    }
+
+    public function setOnlyGroups(array $onlyGroups): self
+    {
+        $this->onlyGroups = $onlyGroups;
 
         return $this;
     }

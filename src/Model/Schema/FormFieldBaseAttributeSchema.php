@@ -7,15 +7,20 @@ use Letkode\FormSchemaBuilder\Model\AbstractValuesModel;
 class FormFieldBaseAttributeSchema extends AbstractValuesModel
 {
     protected static array $values = [
-        'create' => true, // Mostrar en la tabla.
-        'edit' => true, // Se edita en el formulario.
+        'create' => true,
+        'edit' => true,
         'edit_multiple' => false,
-        'readonly' => false, // Solo lectura en el formulario.
-        'required' => true, // Requerido en el formulario.
-        'prop_relation' => null,
-        'entity_relation' => null,
-        'unique' => false, // Valor único para ser procesado.
-        'unique_params' => [
+        'readonly' => false,
+        'required' => true,
+        'ignore_required' => false,
+        'default_value' => null,
+        'relationship_entity' => [
+            'enabled' => false,
+            'class' => null,
+            'prop' => 'uuid',
+        ],
+        'unique' => [
+            'enabled' => false,
             'entity' => null,
             'method' => null
         ],
@@ -29,7 +34,6 @@ class FormFieldBaseAttributeSchema extends AbstractValuesModel
         'filter' => [
             'enabled' => false,
         ],
-        'is_relationship_entity' => null,
         'check_by_role' => ['enabled' => false, 'hierarchy' => true, 'roles_allow' => []],
         'header' => [
             'enabled' => false,

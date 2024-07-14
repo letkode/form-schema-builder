@@ -4,13 +4,16 @@
   "license": "MIT",
   "authors": [
     {
-      "name": "LetkodeApp",
-      "email": "letkode.app@gmail.com"
+      "name": "LetKode App <letkode.app@gmail.com>",
+      "homepage": "https://letkode.com/"
     }
   ],
   "require": {
     "php": ">=8.2",
+    "doctrine/doctrine-bundle": "^2",
+    "doctrine/doctrine-migrations-bundle": "^3",
     "doctrine/orm": "^2",
+    "letkode/helpers": "^1",
     "symfony/dependency-injection": "^6.4",
     "symfony/doctrine-bridge": "^6.4",
     "stof/doctrine-extensions-bundle": "^1.9",

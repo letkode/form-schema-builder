@@ -2,6 +2,7 @@
 
 namespace Letkode\FormSchemaBuilder\Entity;
 
+use Letkode\FormSchemaBuilder\Enum\FieldTypeEnum;
 use Letkode\FormSchemaBuilder\Repository\FormFieldRepository;
 use Letkode\FormSchemaBuilder\Traits\Entity\ParameterTrait;
 use Letkode\FormSchemaBuilder\Traits\Entity\UuidTrait;
@@ -26,8 +27,8 @@ class FormField
     #[ORM\Column(type: Types::STRING)]
     private string $tag;
 
-    #[ORM\Column(type: Types::STRING)]
-    private string $type;
+    #[ORM\Column(type: Types::STRING, enumType: FieldTypeEnum::class)]
+    private FieldTypeEnum|string $type;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description;
@@ -119,12 +120,12 @@ class FormField
 
     public function getType(): string
     {
-        return $this->type;
+        return $this->type->value;
     }
 
-    public function setType(string $type): self
+    public function setType(FieldTypeEnum|string $type): self
     {
-        $this->type = $type;
+        $this->type = is_string($type) ? FieldTypeEnum::strToCase($type) : $type;
 
         return $this;
     }

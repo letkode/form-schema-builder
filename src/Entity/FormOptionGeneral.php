@@ -2,7 +2,7 @@
 
 namespace Letkode\FormSchemaBuilder\Entity;
 
-use Letkode\FormSchemaBuilder\Repository\OptionGeneralRepository;
+use Letkode\FormSchemaBuilder\Repository\FormOptionGeneralRepository;
 use Letkode\FormSchemaBuilder\Traits\Entity\UuidTrait;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -11,10 +11,10 @@ use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
 
-#[ORM\Entity(repositoryClass: OptionGeneralRepository::class)]
-#[ORM\Table(name: '`option_general`')]
+#[ORM\Entity(repositoryClass: FormOptionGeneralRepository::class)]
+#[ORM\Table(name: '`form_option_general`')]
 #[Gedmo\SoftDeleteable(fieldName: 'deletedAt', timeAware: false)]
-class OptionGeneral
+class FormOptionGeneral
 {
     use UuidTrait;
     use SoftDeleteableEntity;
@@ -33,7 +33,7 @@ class OptionGeneral
     #[ORM\Column(type: Types::JSON)]
     private array $parameters;
 
-    #[ORM\OneToMany(mappedBy: 'group', targetEntity: OptionGeneralValue::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'group', targetEntity: FormOptionGeneralValue::class, cascade: ['persist', 'remove'])]
     #[ORM\OrderBy(['position' => 'ASC'])]
     private Collection $values;
 
@@ -106,14 +106,14 @@ class OptionGeneral
         return $this;
     }
 
-    public function addValue(OptionGeneralValue $value): self
+    public function addValue(FormOptionGeneralValue $value): self
     {
         $this->values[] = $value;
 
         return $this;
     }
 
-    public function removeValue(OptionGeneralValue $value): void
+    public function removeValue(FormOptionGeneralValue $value): void
     {
         $this->values->removeElement($value);
     }
@@ -123,27 +123,23 @@ class OptionGeneral
         return $this->values;
     }
 
-    public function getValuesToArray(?string $key = null, ?string $text = null): array
+    public function getValuesToArray(array $parameters): array
     {
-        $key = $key ?? 'id';
-        $text = $text ?? 'text';
+        $key = $parameters['_key'] ?? 'id';
+        $text = $parameters['_text'] ?? 'text';
 
-        $values = [];
-        /** @var OptionGeneralValue $value */
+        $values = $parameters['_with_all_option']
+            ? [$parameters['_all_option_params']['id'] => $parameters['_all_option_params']['text']]
+            : [];
+
+        /** @var FormOptionGeneralValue $value */
         foreach ($this->getValues() as $value) {
             if (!$value->isEnabled()) {
                 continue;
             }
-
             $data = $value->toArray(false);
 
-            $values[$value->getId()] = [
-                'id' => $data[$key] ?? $data['id'],
-                'text' => $data[$text] ?? $data['text'],
-                'label_tag' => $option['label_tag'] ?? null,
-                'icon' => $option['icon'] ?? null,
-                'position' => $data['position'] ?? 0,
-            ];
+            $values[$data[$key] ?? $data['id']] = $data[$text] ?? $data['text'];
         }
 
         return $values;

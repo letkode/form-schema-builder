@@ -2,19 +2,17 @@
 
 namespace Letkode\FormSchemaBuilder\Entity;
 
-use Letkode\FormSchemaBuilder\Repository\OptionGeneralValueRepository;
+use Letkode\FormSchemaBuilder\Repository\FormOptionGeneralValueRepository;
 use Letkode\FormSchemaBuilder\Traits\Entity\UuidTrait;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
-use Symfony\Component\Serializer\Annotation\Groups;
-
-#[ORM\Entity(repositoryClass: OptionGeneralValueRepository::class)]
-#[ORM\Table(name: '`option_general_value`')]
+#[ORM\Entity(repositoryClass: FormOptionGeneralValueRepository::class)]
+#[ORM\Table(name: '`form_option_general_value`')]
 #[Gedmo\SoftDeleteable(fieldName: 'deletedAt', timeAware: false)]
 #[ORM\HasLifecycleCallbacks()]
-class OptionGeneralValue
+class FormOptionGeneralValue
 {
     use UuidTrait;
     use SoftDeleteableEntity;
@@ -25,32 +23,26 @@ class OptionGeneralValue
     private ?int $id;
 
     #[ORM\Column(type: Types::STRING)]
-    #[Groups(['option_value_basic'])]
     private string $text;
 
     #[ORM\Column(type: Types::STRING, length: 100, unique: true)]
-    #[Groups(['option_value_basic'])]
     private string $tag;
 
     #[ORM\Column(type: 'text', nullable: true)]
-    #[Groups(['option_value_basic'])]
     private ?string $description;
 
     #[ORM\Column(type: Types::JSON)]
-    #[Groups(['option_value_basic'])]
     private array $parameters;
 
     #[ORM\Column(type: Types::INTEGER, options: ['default' => 0])]
-    #[Groups(['option_value_basic'])]
     private int $position;
 
     #[ORM\Column(type: Types::BOOLEAN, options: ['default' => 1])]
-    #[Groups(['option_value_basic'])]
     private bool $enabled;
 
-    #[ORM\ManyToOne(targetEntity: OptionGeneral::class, inversedBy: 'values')]
+    #[ORM\ManyToOne(targetEntity: FormOptionGeneral::class, inversedBy: 'values')]
     #[ORM\JoinColumn(name: 'group_id', referencedColumnName: 'id')]
-    private OptionGeneral $group;
+    private FormOptionGeneral $group;
 
     public function toArray(bool $withGroup = true): array
     {
@@ -155,12 +147,12 @@ class OptionGeneralValue
         return $this;
     }
 
-    public function getGroup(): OptionGeneral
+    public function getGroup(): FormOptionGeneral
     {
         return $this->group;
     }
 
-    public function setGroup(OptionGeneral $group): self
+    public function setGroup(FormOptionGeneral $group): self
     {
         $this->group = $group;
 
