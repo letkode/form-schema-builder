@@ -16,7 +16,7 @@ class FormSchemaBuilderExtension extends Extension
             $container,
             new FileLocator(__DIR__ . '/../Resources/config')
         );
-        $loader->load('services.yaml');
+        $loader->load('form_schema_builder.yaml');
 
         $configuration = new Configuration();
         $processor = new Processor();
