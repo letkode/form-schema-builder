@@ -1,8 +1,13 @@
 <?php
 namespace Letkode\FormSchemaBuilder\Entity;
 
+use JetBrains\PhpStorm\ArrayShape;
+use Letkode\FormSchemaBuilder\Enum\TypeFilterFormStructureEnum;
 use Letkode\FormSchemaBuilder\Repository\FormRepository;
+use Letkode\FormSchemaBuilder\Traits\Entity\DefaultLangTrait;
+use Letkode\FormSchemaBuilder\Traits\Entity\LangTrait;
 use Letkode\FormSchemaBuilder\Traits\Entity\ParameterTrait;
+use Letkode\FormSchemaBuilder\Traits\Entity\TranslationTrait;
 use Letkode\FormSchemaBuilder\Traits\Entity\UuidTrait;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -12,6 +17,9 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: FormRepository::class)]
 class Form
 {
+    use LangTrait;
+    use TranslationTrait;
+    use DefaultLangTrait;
     use ParameterTrait;
     use UuidTrait;
 
@@ -33,8 +41,9 @@ class Form
     #[ORM\OrderBy(['position' => 'ASC'])]
     private Collection $sections;
 
-    private array $onlySections = [];
-    private array $onlyGroups = [];
+    private array $filterSections = [];
+
+    private array $filterGroups = [];
 
     public function __construct()
     {
@@ -44,29 +53,51 @@ class Form
 
     public function toArray(): array
     {
+        $lang = $this->getLang();
+        $filterSections = $this->getFilterSections();
+        $filterGroups = $this->getFilterGroups();
+
         $sections = [];
         /** @var FormSection $section */
         foreach ($this->getSections() as $section) {
-            if (!empty($this->getOnlySections()) && !in_array($section->getTag(), $this->getOnlySections())) {
-                continue;
+            if ($filterSections['items'] !== []) {
+                if ($filterSections['type'] === TypeFilterFormStructureEnum::INCLUDE && !in_array(
+                        $section->getTag(),
+                        $filterSections['items']
+                    )) {
+                    continue;
+                }
+
+                if ($filterSections['type'] === TypeFilterFormStructureEnum::EXCLUDE && in_array(
+                        $section->getTag(),
+                        $filterSections['items']
+                    )) {
+                    continue;
+                }
             }
 
-            $sections[$section->getId()] = $section->setOnlyGroups($this->getOnlyGroups())->toArray();
+            $sections[$section->getId()] = $section
+                ->setLang($lang)
+                ->setFilterGroups($filterGroups['items'], $filterGroups['type'])
+                ->toArray();
         }
 
         return [
-            'id' => $this->getId(),
+            'id' => $this->getUuid(),
             'name' => $this->getName(),
             'tag' => $this->getTag(),
+            'lang' => $this->getLang(),
+            'default_lang' => $this->getDefaultLang(),
             'parameters' => $this->getParameters(),
             'enabled' => $this->isEnabled(),
             'sections' => array_values($sections),
-            'uuid' => $this->getUuid(),
         ];
     }
 
     public function toArrayFields(): array
     {
+        $lang = $this->getLang();
+
         $fields = [];
         /** @var FormSection $section */
         foreach ($this->getSections() as $section) {
@@ -74,9 +105,10 @@ class Form
                 continue;
             }
 
+            $section->setLang($lang);
             /** @var FormGroup $group */
             foreach ($section->getGroups() as $group) {
-                $groupArray = $group->toArray();
+                $groupArray = $group->setLang($lang)->toArray();
                 $fields = array_merge($fields, $groupArray['fields']);
             }
         }
@@ -86,15 +118,21 @@ class Form
 
     public function getFieldsArrayCollections(): ArrayCollection
     {
+        $lang = $this->getLang();
+
         $fields = new ArrayCollection();
         /** @var FormSection $section */
         foreach ($this->getSections() as $section) {
 
+            $section->setLang($lang);
             /** @var FormGroup $group */
             foreach ($section->getGroups() as $group) {
 
+                $group->setLang($lang);
                 /** @var FormField $field */
                 foreach ($group->getFields() as $field) {
+                    $field->setLang($lang);
+
                     $fields->add($field);
                 }
             }
@@ -130,7 +168,7 @@ class Form
 
     public function getName(): string
     {
-        return $this->name;
+        return $this->getTranslationByLang($this->getLang(), 'name', $this->name);
     }
 
     public function setName(string $name): self
@@ -190,26 +228,34 @@ class Form
         return $this;
     }
 
-    public function getOnlySections(): array
+    #[ArrayShape([
+        'items' => 'array',
+        'type' => TypeFilterFormStructureEnum::class
+    ])]
+    public function getFilterSections(): array
     {
-        return $this->onlySections;
+        return $this->filterSections;
     }
 
-    public function setOnlySections(array $onlySections): self
+    public function setFilterSections(array $items, TypeFilterFormStructureEnum $typeFilter): self
     {
-        $this->onlySections = $onlySections;
+        $this->filterSections = ['items' => $items, 'type' => $typeFilter];
 
         return $this;
     }
 
-    public function getOnlyGroups(): array
+    #[ArrayShape([
+        'items' => 'array',
+        'type' => TypeFilterFormStructureEnum::class
+    ])]
+    public function getFilterGroups(): array
     {
-        return $this->onlyGroups;
+        return $this->filterGroups;
     }
 
-    public function setOnlyGroups(array $onlyGroups): self
+    public function setFilterGroups(array $items, TypeFilterFormStructureEnum $typeFilter): self
     {
-        $this->onlyGroups = $onlyGroups;
+        $this->filterGroups = ['items' => $items, 'type' => $typeFilter];
 
         return $this;
     }

@@ -2,8 +2,12 @@
 
 namespace Letkode\FormSchemaBuilder\Entity;
 
+use JetBrains\PhpStorm\ArrayShape;
+use Letkode\FormSchemaBuilder\Enum\TypeFilterFormStructureEnum;
 use Letkode\FormSchemaBuilder\Repository\FormSectionRepository;
+use Letkode\FormSchemaBuilder\Traits\Entity\LangTrait;
 use Letkode\FormSchemaBuilder\Traits\Entity\ParameterTrait;
+use Letkode\FormSchemaBuilder\Traits\Entity\TranslationTrait;
 use Letkode\FormSchemaBuilder\Traits\Entity\UuidTrait;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -13,6 +17,8 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: FormSectionRepository::class)]
 class FormSection
 {
+    use LangTrait;
+    use TranslationTrait;
     use ParameterTrait;
     use UuidTrait;
 
@@ -41,10 +47,10 @@ class FormSection
     private ?Form $form;
 
     #[ORM\OneToMany(mappedBy: 'section', targetEntity: FormGroup::class)]
-    #[ORM\OrderBy(['position' => 'ASC'])]
+    #[ORM\OrderBy(['position' => 'ASC', 'id' => 'ASC'])]
     private Collection $groups;
 
-    private array $onlyGroups = [];
+    private array $filterGroups = [];
 
     public function __construct()
     {
@@ -54,18 +60,31 @@ class FormSection
 
     public function toArray(): array
     {
+        $filterGroups = $this->getFilterGroups();
         $groups = [];
         /** @var FormGroup $group */
         foreach ($this->getGroups() as $group) {
-            if (!empty($this->getOnlyGroups()) && !in_array($group->getTag(), $this->getOnlyGroups())) {
-                continue;
+            if ($filterGroups['items'] !== []) {
+                if ($filterGroups['type'] === TypeFilterFormStructureEnum::INCLUDE && !in_array(
+                        $group->getTag(),
+                        $filterGroups['items']
+                    )) {
+                    continue;
+                }
+
+                if ($filterGroups['type'] === TypeFilterFormStructureEnum::EXCLUDE && in_array(
+                        $group->getTag(),
+                        $filterGroups['items']
+                    )) {
+                    continue;
+                }
             }
 
             $groups[$group->getId()] = $group->toArray();
         }
 
         return [
-            'id' => $this->getId(),
+            'id' => $this->getUuid(),
             'name' => $this->getName(),
             'tag' => $this->getTag(),
             'description' => $this->getDescription(),
@@ -73,7 +92,6 @@ class FormSection
             'position' => $this->getPosition(),
             'enabled' => $this->isEnabled(),
             'groups' => array_values($groups),
-            'uuid' => $this->getUuid(),
         ];
     }
 
@@ -84,7 +102,7 @@ class FormSection
 
     public function getName(): string
     {
-        return $this->name;
+        return $this->getTranslationByLang($this->getLang(), 'name', $this->name);
     }
 
     public function setName(string $name): self
@@ -108,7 +126,7 @@ class FormSection
 
     public function getDescription(): ?string
     {
-        return $this->description;
+        return $this->getTranslationByLang($this->getLang(), 'description', $this->description);
     }
 
     public function setDescription(?string $description): self
@@ -180,14 +198,18 @@ class FormSection
         return $this;
     }
 
-    public function getOnlyGroups(): array
+    #[ArrayShape([
+        'items' => 'array',
+        'type' => TypeFilterFormStructureEnum::class
+    ])]
+    public function getFilterGroups(): array
     {
-        return $this->onlyGroups;
+        return $this->filterGroups;
     }
 
-    public function setOnlyGroups(array $onlyGroups): self
+    public function setFilterGroups(array $items, TypeFilterFormStructureEnum $typeFilter): self
     {
-        $this->onlyGroups = $onlyGroups;
+        $this->filterGroups = ['items' => $items, 'type' => $typeFilter];
 
         return $this;
     }

@@ -3,6 +3,8 @@
 namespace Letkode\FormSchemaBuilder\Entity;
 
 use Letkode\FormSchemaBuilder\Repository\FormOptionGeneralRepository;
+use Letkode\FormSchemaBuilder\Traits\Entity\LangTrait;
+use Letkode\FormSchemaBuilder\Traits\Entity\TranslationTrait;
 use Letkode\FormSchemaBuilder\Traits\Entity\UuidTrait;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -16,6 +18,8 @@ use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
 #[Gedmo\SoftDeleteable(fieldName: 'deletedAt', timeAware: false)]
 class FormOptionGeneral
 {
+    use LangTrait;
+    use TranslationTrait;
     use UuidTrait;
     use SoftDeleteableEntity;
 
@@ -34,7 +38,7 @@ class FormOptionGeneral
     private array $parameters;
 
     #[ORM\OneToMany(mappedBy: 'group', targetEntity: FormOptionGeneralValue::class, cascade: ['persist', 'remove'])]
-    #[ORM\OrderBy(['position' => 'ASC'])]
+    #[ORM\OrderBy(['position' => 'ASC', 'id' => 'ASC'])]
     private Collection $values;
 
     public function toArray(bool $withValues = true): array
@@ -65,7 +69,7 @@ class FormOptionGeneral
 
     public function getName(): string
     {
-        return $this->name;
+        return $this->getTranslationByLang($this->getLang(), 'name', $this->name);
     }
 
     public function setName(string $name): self

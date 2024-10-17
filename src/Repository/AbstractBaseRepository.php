@@ -2,10 +2,10 @@
 
 namespace Letkode\FormSchemaBuilder\Repository;
 
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryProxy;
 use Doctrine\Persistence\ManagerRegistry;
 
-abstract class AbstractBaseRepository extends ServiceEntityRepository
+abstract class AbstractBaseRepository extends ServiceEntityRepositoryProxy
 {
     public function __construct(
         ManagerRegistry $managerRegistry

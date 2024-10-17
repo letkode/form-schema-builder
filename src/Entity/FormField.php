@@ -3,8 +3,11 @@
 namespace Letkode\FormSchemaBuilder\Entity;
 
 use Letkode\FormSchemaBuilder\Enum\FieldTypeEnum;
+use Letkode\FormSchemaBuilder\Model\Schema\FormFieldBaseAttributeSchema;
 use Letkode\FormSchemaBuilder\Repository\FormFieldRepository;
+use Letkode\FormSchemaBuilder\Traits\Entity\LangTrait;
 use Letkode\FormSchemaBuilder\Traits\Entity\ParameterTrait;
+use Letkode\FormSchemaBuilder\Traits\Entity\TranslationTrait;
 use Letkode\FormSchemaBuilder\Traits\Entity\UuidTrait;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -13,6 +16,8 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: FormFieldRepository::class)]
 class FormField
 {
+    use LangTrait;
+    use TranslationTrait;
     use ParameterTrait;
     use UuidTrait;
 
@@ -46,23 +51,6 @@ class FormField
     #[ORM\JoinColumn(name: 'group_id', referencedColumnName: 'id')]
     private ?FormGroup $group;
 
-    const DEFAULT_ATTRIBUTES =  [
-        'check_by_role' => ['enabled' => false, 'hierarchy' => true, 'roles_allow' => []],
-        'type_value' => 'string',
-        'required' => false,
-        'unique' => false,
-        'unique_params' => [
-            'entity' => null,
-            'method' => null
-        ],
-        'unique_entity' => null,
-        'is_relationship_entity' => null,
-        'column_table' => true,
-        'hidden_form' => false,
-        'show_bulk_upload_summary' => true,
-        'rename' => null
-    ];
-
     public function __construct()
     {
         $this->setUuid();
@@ -71,22 +59,20 @@ class FormField
     public function toArray(): array
     {
         return [
-            'id' => $this->getId(),
+            'id' => $this->getUuid(),
             'text' => $this->getName(),
             'name' => $this->getName(),
             'type' => $this->getType(),
             'tag' => $this->getTag(),
-            'slug' => $this->getTag(),
             'description' => $this->getDescription(),
             'attributes' => $this->getAttributes(),
             'parameters' => $this->getParameters(),
             'position' => $this->getPosition(),
             'enabled' => $this->isEnabled(),
-            'uuid' => $this->getUuid(),
             'placeholder' => $this->getParameter('placeholder'),
             'default_value' => $this->getParameter('default_value'),
             'values' => [],
-            'style' => $this->getParameter('style', ['lg:w-6/12'])
+            'style' => $this->getParameter('style', ['lg:w-6/12']),
         ];
     }
 
@@ -96,7 +82,7 @@ class FormField
     }
     public function getName(): string
     {
-        return $this->name;
+        return $this->getTranslationByLang($this->getLang(), 'name', $this->name);
     }
 
     public function setName(string $name): self
@@ -132,7 +118,7 @@ class FormField
 
     public function getDescription(): ?string
     {
-        return $this->description;
+        return $this->getTranslationByLang($this->getLang(), 'description', $this->description);
     }
 
     public function setDescription(?string $description): self
@@ -151,7 +137,7 @@ class FormField
 
     public function getAttributes(): array
     {
-        return array_replace_recursive(self::DEFAULT_ATTRIBUTES, $this->attributes);
+        return array_replace_recursive(FormFieldBaseAttributeSchema::getValues(), $this->attributes);
     }
 
     public function setAttributes(array $attributes): self

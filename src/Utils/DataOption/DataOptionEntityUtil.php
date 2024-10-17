@@ -13,9 +13,9 @@ class DataOptionEntityUtil extends DataOptionUtil implements DataOptionInterface
         $method = $paramsAttr['method'] ?? 'getDataEntity';
 
         if (!method_exists(
-            sprintf('App\Entity\%s', $paramsAttr['entity']), $method
-        )
-        ) {
+            sprintf('%s\%s', $this->getConfig('namespace_entity', 'App\Entity'), $paramsAttr['entity']),
+            $method
+        )) {
             throw new BadRequestException(
                 sprintf('Method "%s" not found in entity class', $method)
             );
@@ -29,7 +29,13 @@ class DataOptionEntityUtil extends DataOptionUtil implements DataOptionInterface
         ];
 
         return $this->getEntityManager()
-            ->getRepository(sprintf('App\Entity\%s', $paramsAttr['entity']))
+            ->getRepository(
+                sprintf(
+                    '%s\%s',
+                    $this->getConfig('namespace_entity', 'App\Entity'),
+                    $paramsAttr['entity']
+                )
+            )
             ->{$method}($parameters);
     }
 }

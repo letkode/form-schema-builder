@@ -3,6 +3,8 @@
 namespace Letkode\FormSchemaBuilder\Entity;
 
 use Letkode\FormSchemaBuilder\Repository\FormOptionGeneralValueRepository;
+use Letkode\FormSchemaBuilder\Traits\Entity\LangTrait;
+use Letkode\FormSchemaBuilder\Traits\Entity\TranslationTrait;
 use Letkode\FormSchemaBuilder\Traits\Entity\UuidTrait;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -14,6 +16,8 @@ use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
 #[ORM\HasLifecycleCallbacks()]
 class FormOptionGeneralValue
 {
+    use LangTrait;
+    use TranslationTrait;
     use UuidTrait;
     use SoftDeleteableEntity;
 
@@ -70,7 +74,7 @@ class FormOptionGeneralValue
 
     public function getText(): string
     {
-        return $this->text;
+        return $this->getTranslationByLang($this->getLang(), 'text', $this->text);
     }
 
     public function setText(string $text): self

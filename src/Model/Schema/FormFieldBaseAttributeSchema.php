@@ -7,13 +7,23 @@ use Letkode\FormSchemaBuilder\Model\AbstractValuesModel;
 class FormFieldBaseAttributeSchema extends AbstractValuesModel
 {
     protected static array $values = [
-        'create' => true,
-        'edit' => true,
-        'edit_multiple' => false,
-        'readonly' => false,
-        'required' => true,
-        'ignore_required' => false,
         'default_value' => null,
+        'set_options_values' => false,
+        'create' => [
+            'enabled' => true,
+            'required' => true,
+            'readonly' => false,
+        ],
+        'update' => [
+            'enabled' => true,
+            'required' => true,
+            'readonly' => false,
+        ],
+        'update_multiple' => [
+            'enabled' => true,
+            'required' => false,
+            'readonly' => false,
+        ],
         'relationship_entity' => [
             'enabled' => false,
             'class' => null,
@@ -24,21 +34,19 @@ class FormFieldBaseAttributeSchema extends AbstractValuesModel
             'entity' => null,
             'method' => null
         ],
-        'sql' => [ //  Parámetros para búsqueda en SQL
-            'to_ignore_sql' => false,
-            'alias_sql' => null,
-            'name_sql' => null,
-            'eval_filter' => null,
-            'format_filter' => null,
-        ],
         'filter' => [
             'enabled' => false,
+            'key' => null,
         ],
-        'check_by_role' => ['enabled' => false, 'hierarchy' => true, 'roles_allow' => []],
+        'check_by_role' => [
+            'enabled' => false,
+            'hierarchy' => true,
+            'roles_allow' => []
+        ],
         'header' => [
             'enabled' => false,
             'class' => '',
-            'key_show' => null,
+            'key' => null,
             'position' => 0,
             'link_action' => [
                 'icon' => null,
@@ -49,6 +57,13 @@ class FormFieldBaseAttributeSchema extends AbstractValuesModel
                 'route_params' => [],
                 'children' => [],
             ]
+        ],
+        'sql' => [
+            'to_ignore_sql' => false,
+            'alias_sql' => null,
+            'name_sql' => null,
+            'eval_filter' => null,
+            'format_filter' => null,
         ],
         'bulk_upload' => [
             'enabled' => false,

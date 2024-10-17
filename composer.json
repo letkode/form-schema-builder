@@ -20,7 +20,7 @@
     "symfony/uid": "^6.4"
   },
   "require-dev": {
-    "phpunit/phpunit": "^9.5"
+    "phpunit/phpunit": "^11.4"
   },
   "autoload": {
     "psr-4": {
@@ -34,5 +34,13 @@
   },
   "suggest": {
     "doctrine/orm": "^2.x"
+  },
+  "scripts": {
+    "post-install-cmd": [
+      "Letkode\\FormSchemaBuilder\\Installer::install"
+    ],
+    "post-update-cmd": [
+      "Letkode\\FormSchemaBuilder\\Installer::install"
+    ]
   }
 }

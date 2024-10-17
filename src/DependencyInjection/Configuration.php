@@ -16,32 +16,56 @@ class Configuration implements ConfigurationInterface
 {
     public function getConfigTreeBuilder(): TreeBuilder
     {
-        $treeBuilder = new TreeBuilder('app.doctrine');
-        $rootNode =$treeBuilder->getRootNode();
+        $treeBuilder = new TreeBuilder('form_schema_builder');
+        $rootNode = $treeBuilder->getRootNode();
 
+        $this->addParameterInitLibrary($rootNode);
         $this->addMappingEntityRequired($rootNode);
 
         return $treeBuilder;
     }
 
+    private function addParameterInitLibrary(ArrayNodeDefinition $rootNode): void
+    {
+        $rootNode
+            ->addDefaultsIfNotSet()
+            ->children()
+                ->scalarNode('namespace_entity')
+                    ->cannotBeEmpty()
+                    ->defaultValue('App\Entity')
+                ->end()
+                ->arrayNode('custom_form_field')
+                    ->useAttributeAsKey('name')
+                    ->prototype('scalar')->end()
+                ->end()
+            ->end()
+        ->end();
+    }
+
     private function addMappingEntityRequired(ArrayNodeDefinition $rootNode): void
     {
-        $rootNode->children()
-                ->arrayNode('orm')
-                    ->children()
-                        ->arrayNode('mappings')
-                            ->addDefaultsIfNotSet()
-                            ->children()
-                                ->scalarNode(Form::class)->end()
-                                ->scalarNode(FormSection::class)->end()
-                                ->scalarNode(FormGroup::class)->end()
-                                ->scalarNode(FormField::class)->end()
-                                ->scalarNode(FormOptionGeneral::class)->end()
-                                ->scalarNode(FormOptionGeneralValue::class)->end()
+        $rootNode
+            ->addDefaultsIfNotSet()
+            ->children()
+            ->arrayNode('doctrine')
+                ->children()
+                    ->arrayNode('orm')
+                        ->children()
+                            ->arrayNode('mappings')
+                                ->addDefaultsIfNotSet()
+                                ->children()
+                                    ->scalarNode(Form::class)->end()
+                                    ->scalarNode(FormSection::class)->end()
+                                    ->scalarNode(FormGroup::class)->end()
+                                    ->scalarNode(FormField::class)->end()
+                                    ->scalarNode(FormOptionGeneral::class)->end()
+                                    ->scalarNode(FormOptionGeneralValue::class)->end()
+                                ->end()
                             ->end()
                         ->end()
                     ->end()
                 ->end()
-            ->end();
+            ->end()
+        ->end();
     }
 }

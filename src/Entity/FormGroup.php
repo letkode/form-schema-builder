@@ -3,7 +3,9 @@
 namespace Letkode\FormSchemaBuilder\Entity;
 
 use Letkode\FormSchemaBuilder\Repository\FormGroupRepository;
+use Letkode\FormSchemaBuilder\Traits\Entity\LangTrait;
 use Letkode\FormSchemaBuilder\Traits\Entity\ParameterTrait;
+use Letkode\FormSchemaBuilder\Traits\Entity\TranslationTrait;
 use Letkode\FormSchemaBuilder\Traits\Entity\UuidTrait;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -13,6 +15,8 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: FormGroupRepository::class)]
 class FormGroup
 {
+    use LangTrait;
+    use TranslationTrait;
     use ParameterTrait;
     use UuidTrait;
 
@@ -41,7 +45,7 @@ class FormGroup
     private ?FormSection $section;
 
     #[ORM\OneToMany(mappedBy: 'group', targetEntity: FormField::class)]
-    #[ORM\OrderBy(['position' => 'ASC'])]
+    #[ORM\OrderBy(['position' => 'ASC', 'id' => 'ASC'])]
     private Collection $fields;
 
     public function __construct()
@@ -59,7 +63,7 @@ class FormGroup
         }
 
         return [
-            'id' => $this->getId(),
+            'id' => $this->getUuid(),
             'name' => $this->getName(),
             'tag' => $this->getTag(),
             'description' => $this->getDescription(),
@@ -68,7 +72,6 @@ class FormGroup
             'position' => $this->getPosition(),
             'enabled' => $this->isEnabled(),
             'fields' => array_values($fields),
-            'uuid' => $this->getUuid(),
         ];
     }
 
@@ -79,7 +82,7 @@ class FormGroup
 
     public function getName(): string
     {
-        return $this->name;
+        return $this->getTranslationByLang($this->getLang(), 'name', $this->name);
     }
 
     public function setName(string $name): self
@@ -103,7 +106,7 @@ class FormGroup
 
     public function getDescription(): ?string
     {
-        return $this->description;
+        return $this->getTranslationByLang($this->getLang(), 'description', $this->description);
     }
 
     public function setDescription(?string $description): self

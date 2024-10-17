@@ -4,38 +4,43 @@ namespace Letkode\FormSchemaBuilder\Service;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Letkode\FormSchemaBuilder\Entity\Form;
+use Letkode\FormSchemaBuilder\Enum\TypeFilterFormStructureEnum;
 use Letkode\FormSchemaBuilder\Repository\FormRepository;
 use Letkode\FormSchemaBuilder\Utils\DataOptionUtil;
 use Letkode\FormSchemaBuilder\Utils\FormatterValueTypeUtils;
+use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class FormService
 {
-    private EntityManagerInterface $entityManager;
-    private Form $form;
-    private FormRepository $repository;
-    private array $parameters = [];
-    private array $generalParameters = [];
-    private array $configOptions = [];
-    private array $fieldsArray = [];
-    private ?string $attrActionCheck = null;
-    private array $filterSections = ['filter' => 'include', 'sections' => []];
-    private array $filterGroups = ['filter' => 'include', 'groups' => []];
-    private array $onlySections = [];
-    private array $onlyGroups = [];
-    private bool $onlyFieldStructure = false;
-    private static array $typeFieldsWithOptions = [
-        'list',
-        'list-group',
-        'list-multiple',
-        'list-group-multiple',
-        'matrix-simple',
-    ];
 
-    public function __construct(EntityManagerInterface $entityManager, FormRepository $formRepository)
+    private Form $form;
+
+    private array $parameters = [];
+
+    private array $generalParameters = [];
+
+    private array $configOptions = [];
+
+    private array $fieldsArray = [];
+
+    private ?string $attrActionCheck = null;
+
+    private TypeFilterFormStructureEnum $typeFilterSection;
+
+    private array $filterSectionItems = [];
+
+    private TypeFilterFormStructureEnum $typeFilterGroup;
+
+    private array $filterGroupItems = [];
+
+    private bool $onlyFieldStructure = false;
+
+    public function __construct(private readonly EntityManagerInterface $entityManager, private readonly FormRepository $formRepository, private readonly ParameterBag $parameterBag)
     {
-        $this->entityManager = $entityManager;
-        $this->repository = $formRepository;
+        $this->setConfigOptions([
+            'namespace_entity' => $this->parameterBag->get('form_schema_builder.namespace_entity')
+        ]);
     }
 
     public function getForm(): Form
@@ -76,10 +81,10 @@ class FormService
 
     /**
      * Load Form Object by Tag
-     */
+     **/
     public function load(string $tag): self
     {
-        if (null === $object = $this->repository->findOneBy(['tag' => $tag])) {
+        if (null === $object = $this->formRepository->findOneBy(['tag' => $tag])) {
             throw new NotFoundHttpException(sprintf('Form %s not found', $tag));
         }
 
@@ -95,14 +100,13 @@ class FormService
     {
         $formStructure = $this
             ->getForm()
-            ->setOnlySections($this->getOnlySections())
-            ->setOnlyGroups($this->getOnlyGroups())
+            ->setFilterSections($this->getFilterSectionItems(), $this->getTypeFilterSection())
+            ->setFilterGroups($this->getFilterGroupItems(), $this->getTypeFilterGroup())
             ->toArray();
 
         if ($this->isOnlyFieldStructure()) {
             return $this->getArrayFields();
         }
-
 
         return $formStructure;
     }
@@ -136,26 +140,50 @@ class FormService
         return $this;
     }
 
-    public function getOnlySections(): array
+    public function getTypeFilterSection(): TypeFilterFormStructureEnum
     {
-        return $this->onlySections;
+        return $this->typeFilterSection;
     }
 
-    public function setOnlySections(array $onlySections): self
+    public function setTypeFilterSection(TypeFilterFormStructureEnum $typeFilterSection): self
     {
-        $this->onlySections = $onlySections;
+        $this->typeFilterSection = $typeFilterSection;
 
         return $this;
     }
 
-    public function getOnlyGroups(): array
+    public function getFilterSectionItems(): array
     {
-        return $this->onlyGroups;
+        return $this->filterSectionItems;
     }
 
-    public function setOnlyGroups(array $onlyGroups): self
+    public function setFilterSectionItems(array $filterSectionItems): self
     {
-        $this->onlyGroups = $onlyGroups;
+        $this->filterSectionItems = $filterSectionItems;
+
+        return $this;
+    }
+
+    public function getTypeFilterGroup(): TypeFilterFormStructureEnum
+    {
+        return $this->typeFilterGroup;
+    }
+
+    public function setTypeFilterGroup(TypeFilterFormStructureEnum $typeFilterGroup): self
+    {
+        $this->typeFilterGroup = $typeFilterGroup;
+
+        return $this;
+    }
+
+    public function getFilterGroupItems(): array
+    {
+        return $this->filterGroupItems;
+    }
+
+    public function setFilterGroupItems(array $filterGroupItems): self
+    {
+        $this->filterGroupItems = $filterGroupItems;
 
         return $this;
     }
@@ -178,34 +206,34 @@ class FormService
     private function processFields(array &$arrayForm): void
     {
         $configOptions = $this->getConfigOptions();
-        $fieldOptions = $configOptions['fields'] ?? [];
 
         foreach ($arrayForm['sections'] as &$section) {
             foreach ($section['groups'] as $keyGroup => &$group) {
                 foreach ($group['fields'] as $keyField => &$field) {
+                    $fieldAttributes = $field['attributes'];
+                    $defaultValueField =  $fieldAttributes['default_value'] ?? null;
 
-                    $defaultValueField =  $field['attributes']['default_value'] ?? null;
-
+                    $required = false;
+                    $readonly = false;
                     if (null !== $attrActionCheck = $this->getAttrActionCheck()) {
-                        if (is_array($field['attributes'][$attrActionCheck])) {
-                            $isActive = $field['attributes'][$attrActionCheck]['enabled'] ?? false;
-                        }else{
-                            $isActive = $field['attributes'][$attrActionCheck] ?? false;
-                        }
-
-                        if (!$isActive) {
+                        if (!($fieldAttributes[$attrActionCheck]['enabled'] ?? false)) {
                             unset($group['fields'][$keyField]);
                             continue;
                         }
+
+                        $required = $fieldAttributes[$attrActionCheck]['required'] ?? false;
+                        $readonly = $fieldAttributes[$attrActionCheck]['readonly'] ?? false;
                     }
 
-                    // Set Data Option
-                    if (in_array($field['type'], self::$typeFieldsWithOptions)) {
+                    if ($fieldAttributes['set_options_values'] ?? false) {
                         $field['parameters']['options'] = (new DataOptionUtil())
+                            ->setConfigs($configOptions)
                             ->setEntityManager($this->entityManager)
                             ->setOptionsParameters($field['parameters']['set_options'])
                             ->get();
                     }
+
+                    $field['attributes'] += ['required' => $required, 'readonly' => $readonly];
 
                     // Formatter default value type Date
                     $field['default_value'] = (new FormatterValueTypeUtils(
@@ -213,9 +241,6 @@ class FormService
                         $defaultValueField)
                     )->format();
 
-                    if ($fieldOptions['ignore_required'] ?? false) {
-                        $field['attributes']['required'] = false;
-                    }
 
                     $this->fieldsArray[$field['tag']] = $field;
                 }

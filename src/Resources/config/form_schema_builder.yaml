@@ -1,0 +1,3 @@
+form_schema_builder:
+    namespace_entity: 'App\Entity'
+    custom_form_field: ~

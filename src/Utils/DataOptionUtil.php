@@ -9,11 +9,12 @@ use Letkode\FormSchemaBuilder\Utils\DataOption\DataOptionStaticUtil;
 
 class DataOptionUtil
 {
-    private array $field;
-
-    private array  $parameters = [];
+    private array  $optionsParameters = [];
 
     private EntityManagerInterface $entityManager;
+
+    private array $configs = [];
+
 
     protected function getEntityManager(): EntityManagerInterface
     {
@@ -29,12 +30,31 @@ class DataOptionUtil
 
     protected function getOptionsParameters(): array
     {
-        return $this->parameters;
+        return $this->optionsParameters;
     }
 
-    public function setOptionsParameters(array $parameters): self
+    public function setOptionsParameters(array $optionsParameters): self
     {
-        $this->parameters = $parameters;
+        $this->optionsParameters = $optionsParameters;
+
+        return $this;
+    }
+
+    protected function getConfig(string $key, mixed $default = null): mixed
+    {
+        $configs = $this->getConfigs();
+
+        return $configs[$key] ?? $default;
+    }
+
+    protected function getConfigs(): array
+    {
+        return $this->configs;
+    }
+
+    public function setConfigs(array $configs): self
+    {
+        $this->configs = $configs;
 
         return $this;
     }
