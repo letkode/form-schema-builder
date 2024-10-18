@@ -35,6 +35,7 @@ class Configuration implements ConfigurationInterface
                     ->defaultValue('App\Entity')
                 ->end()
                 ->arrayNode('custom_form_field')
+                    ->addDefaultsIfNotSet()
                     ->useAttributeAsKey('name')
                     ->prototype('scalar')->end()
                 ->end()

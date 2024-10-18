@@ -11,6 +11,12 @@ class FormSchemaBuilderExtension extends Extension
 {
     public function load(array $configs, ContainerBuilder $container): void
     {
+        if (!file_exists(__DIR__ . '/../Resources/config/form_schema_builder.yaml')) {
+            throw new \Exception(
+                'Archivo form_schema_builder.yaml no encontrado en ' . __DIR__ . '/../Resources/config/form_schema_builder.yaml'
+            );
+        }
+
         $loader = new YamlFileLoader(
             $container,
             new FileLocator(__DIR__ . '/../Resources/config')
