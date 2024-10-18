@@ -2,7 +2,6 @@
 
 namespace Letkode\FormSchemaBuilder\DependencyInjection;
 
-use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
@@ -10,7 +9,7 @@ use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 
 class FormSchemaBuilderExtension extends Extension
 {
-    public function load(array $configs, ContainerBuilder $container)
+    public function load(array $configs, ContainerBuilder $container): void
     {
         $loader = new YamlFileLoader(
             $container,
@@ -19,12 +18,15 @@ class FormSchemaBuilderExtension extends Extension
         $loader->load('form_schema_builder.yaml');
 
         $configuration = new Configuration();
-        $processor = new Processor();
-
-        $config = $processor->processConfiguration($configuration, $configs);
+        $config = $this->processConfiguration($configuration, $configs);
 
         foreach ($config as $key => $value) {
             $container->setParameter('form_schema_builder.' . $key, $value);
         }
+    }
+
+    public function getAlias(): string
+    {
+        return 'form_schema_builder';
     }
 }
