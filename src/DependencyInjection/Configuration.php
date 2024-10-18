@@ -16,7 +16,7 @@ class Configuration implements ConfigurationInterface
 {
     public function getConfigTreeBuilder(): TreeBuilder
     {
-        $treeBuilder = new TreeBuilder('form_schema_builder');
+        $treeBuilder = new TreeBuilder('app');
         $rootNode = $treeBuilder->getRootNode();
 
         $this->addParameterInitLibrary($rootNode);
@@ -30,14 +30,17 @@ class Configuration implements ConfigurationInterface
         $rootNode
             ->addDefaultsIfNotSet()
             ->children()
-                ->scalarNode('namespace_entity')
-                    ->cannotBeEmpty()
-                    ->defaultValue('App\Entity')
-                ->end()
-                ->arrayNode('custom_form_field')
-                    ->addDefaultsIfNotSet()
-                    ->useAttributeAsKey('name')
-                    ->prototype('scalar')->end()
+            ->arrayNode('form_schema_builder')
+                ->children()
+                    ->scalarNode('namespace_entity')
+                        ->cannotBeEmpty()
+                        ->defaultValue('App\Entity')
+                    ->end()
+                    ->arrayNode('custom_form_field')
+                        ->addDefaultsIfNotSet()
+                        ->useAttributeAsKey('name')
+                        ->prototype('scalar')->end()
+                    ->end()
                 ->end()
             ->end()
         ->end();
