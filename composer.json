@@ -36,11 +36,5 @@
     "doctrine/orm": "^2.x"
   },
   "scripts": {
-    "post-install-cmd": [
-      "Letkode\\FormSchemaBuilder\\Installer::install"
-    ],
-    "post-update-cmd": [
-      "Letkode\\FormSchemaBuilder\\Installer::install"
-    ]
   }
 }
