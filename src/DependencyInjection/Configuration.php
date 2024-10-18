@@ -32,7 +32,7 @@ class Configuration implements ConfigurationInterface
             ->children()
             ->arrayNode('form_schema_builder')
                 ->children()
-                    ->scalarNode('namespace_entity')
+                    ->scalarNode('namespace_entity')->isRequired()
                         ->cannotBeEmpty()
                         ->defaultValue('App\Entity')
                     ->end()
